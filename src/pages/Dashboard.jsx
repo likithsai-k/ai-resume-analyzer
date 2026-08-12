@@ -13,9 +13,10 @@ function Dashboard() {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // --------------------------------
+  // ==========================================
   // PDF UPLOAD + TEXT EXTRACTION
-  // --------------------------------
+  // ==========================================
+
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
 
@@ -50,15 +51,18 @@ function Dashboard() {
       }
 
       setResumeText(text);
+
+      console.log("Resume text extracted successfully.");
     } catch (error) {
       console.error("PDF error:", error);
       alert("Could not read this PDF.");
     }
   };
 
-  // --------------------------------
-  // REAL AI ANALYSIS
-  // --------------------------------
+  // ==========================================
+  // AI RESUME ANALYSIS
+  // ==========================================
+
   const analyzeResume = async () => {
     if (!resumeText) {
       alert("Please upload your resume first.");
@@ -74,25 +78,52 @@ function Dashboard() {
       setLoading(true);
       setAnalysis(null);
 
+      console.log("Sending resume to backend...");
+
       const response = await fetch(
-  "https://ai-resume-analyzer-api-g81v.onrender.com/api/analyze",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      resumeText,
-      jobDescription,
-    }),
-  }
-);
+        "https://ai-resume-analyzer-api-g81v.onrender.com/api/analyze",
+        {
+          method: "POST",
 
-      const data = await response.json();
+          headers: {
+            "Content-Type": "application/json",
+          },
 
+          body: JSON.stringify({
+            resumeText,
+            jobDescription,
+          }),
+        }
+      );
+
+      // Get raw response first
+      const responseText = await response.text();
+
+      console.log("Backend status:", response.status);
+      console.log("Backend response:", responseText);
+
+      let data;
+
+      // Try converting response to JSON
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("JSON parsing error:", parseError);
+
+        throw new Error(
+          `Backend returned a non-JSON response.
+
+Status: ${response.status}
+
+Response:
+${responseText.substring(0, 500)}`
+        );
+      }
+
+      // Handle backend errors
       if (!response.ok) {
         throw new Error(
-          data.error || "Analysis failed"
+          data.error || `Backend returned status ${response.status}`
         );
       }
 
@@ -103,7 +134,9 @@ function Dashboard() {
       console.error("Analysis error:", error);
 
       alert(
-        "Could not analyze the resume. Make sure the backend server is running."
+        `Could not analyze the resume.
+
+${error.message}`
       );
     } finally {
       setLoading(false);
@@ -113,9 +146,10 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
 
-      {/* =========================
+      {/* ==========================================
           NAVBAR
-      ========================== */}
+      ========================================== */}
+
       <nav className="bg-blue-600 text-white p-4 shadow">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
 
@@ -130,9 +164,10 @@ function Dashboard() {
         </div>
       </nav>
 
-      {/* =========================
+      {/* ==========================================
           MAIN CONTENT
-      ========================== */}
+      ========================================== */}
+
       <main className="max-w-6xl mx-auto p-8">
 
         <h2 className="text-3xl font-bold mb-2">
@@ -143,9 +178,10 @@ function Dashboard() {
           Upload your resume and compare it with a job description.
         </p>
 
-        {/* =========================
+        {/* ==========================================
             RESUME UPLOAD
-        ========================== */}
+        ========================================== */}
+
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
 
           <h3 className="text-xl font-bold mb-4">
@@ -177,9 +213,10 @@ function Dashboard() {
 
         </div>
 
-        {/* =========================
+        {/* ==========================================
             JOB DESCRIPTION
-        ========================== */}
+        ========================================== */}
+
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
 
           <h3 className="text-xl font-bold mb-4">
@@ -188,9 +225,7 @@ function Dashboard() {
 
           <textarea
             value={jobDescription}
-            onChange={(e) =>
-              setJobDescription(e.target.value)
-            }
+            onChange={(e) => setJobDescription(e.target.value)}
             placeholder="Paste the job description here..."
             className="w-full h-56 border border-gray-300 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
@@ -201,9 +236,10 @@ function Dashboard() {
 
         </div>
 
-        {/* =========================
+        {/* ==========================================
             ANALYZE BUTTON
-        ========================== */}
+        ========================================== */}
+
         <button
           onClick={analyzeResume}
           disabled={loading}
@@ -218,9 +254,10 @@ function Dashboard() {
             : "🤖 Analyze Resume"}
         </button>
 
-        {/* =========================
-            EXTRACTED TEXT
-        ========================== */}
+        {/* ==========================================
+            EXTRACTED RESUME TEXT
+        ========================================== */}
+
         {resumeText && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mt-6">
 
@@ -237,9 +274,10 @@ function Dashboard() {
           </div>
         )}
 
-        {/* =========================
+        {/* ==========================================
             LOADING MESSAGE
-        ========================== */}
+        ========================================== */}
+
         {loading && (
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 mt-8">
 
@@ -248,7 +286,8 @@ function Dashboard() {
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
 
               <p className="text-blue-700 font-semibold">
-                Gemini AI is analyzing your resume against the job description...
+                Gemini AI is analyzing your resume against the job
+                description...
               </p>
 
             </div>
@@ -260,9 +299,10 @@ function Dashboard() {
           </div>
         )}
 
-        {/* =========================
+        {/* ==========================================
             AI ANALYSIS RESULTS
-        ========================== */}
+        ========================================== */}
+
         {analysis && !loading && (
           <div className="mt-10">
 
@@ -270,9 +310,8 @@ function Dashboard() {
               📊 AI Resume Analysis
             </h2>
 
-            {/* =========================
-                ATS SCORE
-            ========================== */}
+            {/* ATS SCORE */}
+
             <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 text-center">
 
               <p className="text-gray-500 text-lg">
@@ -291,10 +330,11 @@ function Dashboard() {
 
             </div>
 
-            {/* =========================
-                STRENGTHS
-            ========================== */}
+            {/* STRENGTHS + MISSING SKILLS */}
+
             <div className="grid md:grid-cols-2 gap-6">
+
+              {/* STRENGTHS */}
 
               <div className="bg-white rounded-2xl shadow-lg p-6">
 
@@ -304,6 +344,7 @@ function Dashboard() {
 
                 {analysis.strengths &&
                 analysis.strengths.length > 0 ? (
+
                   <ul className="space-y-3">
 
                     {analysis.strengths.map(
@@ -318,17 +359,19 @@ function Dashboard() {
                     )}
 
                   </ul>
+
                 ) : (
+
                   <p className="text-gray-500">
                     No strengths returned.
                   </p>
+
                 )}
 
               </div>
 
-              {/* =========================
-                  MISSING SKILLS
-              ========================== */}
+              {/* MISSING SKILLS */}
+
               <div className="bg-white rounded-2xl shadow-lg p-6">
 
                 <h3 className="text-xl font-bold mb-4">
@@ -337,6 +380,7 @@ function Dashboard() {
 
                 {analysis.missingSkills &&
                 analysis.missingSkills.length > 0 ? (
+
                   <ul className="space-y-3">
 
                     {analysis.missingSkills.map(
@@ -351,19 +395,21 @@ function Dashboard() {
                     )}
 
                   </ul>
+
                 ) : (
+
                   <p className="text-green-600 font-semibold">
                     🎉 No major missing skills identified.
                   </p>
+
                 )}
 
               </div>
 
             </div>
 
-            {/* =========================
-                SUGGESTIONS
-            ========================== */}
+            {/* SUGGESTIONS */}
+
             <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
 
               <h3 className="text-xl font-bold mb-4">
@@ -372,6 +418,7 @@ function Dashboard() {
 
               {analysis.suggestions &&
               analysis.suggestions.length > 0 ? (
+
                 <ul className="space-y-3">
 
                   {analysis.suggestions.map(
@@ -386,10 +433,13 @@ function Dashboard() {
                   )}
 
                 </ul>
+
               ) : (
+
                 <p className="text-gray-500">
                   No suggestions returned.
                 </p>
+
               )}
 
             </div>
