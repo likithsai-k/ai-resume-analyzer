@@ -75,7 +75,7 @@ function Dashboard() {
       setAnalysis(null);
 
       const response = await fetch(
-        "https://ai-resume-analyzer-api-g81v.onrender.com",
+        "https://ai-resume-analyzer-api-g81v.onrender.com/api/analyze",
         {
           method: "POST",
           headers: {
