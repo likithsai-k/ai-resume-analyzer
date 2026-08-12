@@ -75,18 +75,18 @@ function Dashboard() {
       setAnalysis(null);
 
       const response = await fetch(
-        "https://ai-resume-analyzer-api-g81v.onrender.com/api/analyze",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            resumeText: resumeText,
-            jobDescription: jobDescription,
-          }),
-        }
-      );
+  "https://ai-resume-analyzer-api-g81v.onrender.com/api/analyze",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      resumeText,
+      jobDescription,
+    }),
+  }
+);
 
       const data = await response.json();
 
